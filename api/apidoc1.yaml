@@ -1,0 +1,458 @@
+openapi: 3.0.0
+info:
+  title: API Dokumentácia
+  version: 1.0.0
+  description: WEBTE2 - API Dokumentácia
+
+paths:
+  /skuska/api/api.php:
+    get:
+      summary: Získať všetky otázky
+      tags: [Test]
+      operationId: getAllQuestions
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [questions]
+      responses:
+        '200':
+          description: Zoznam otázok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+
+  /skuska/api/api.php?route=questions/1:
+    get:
+      summary: Získať otázku podľa ID
+      tags: [Test]
+      operationId: getQuestionById
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            example: questions/1
+      responses:
+        '200':
+          description: Detail otázky
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '404':
+          description: Otázka neexistuje
+  /skuska/api/api.php?route=tests:
+    get:
+      summary: Získať všetky testy aktuálneho používateľa
+      tags: [Test]
+      operationId: getAllUserTests
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            example: tests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Zoznam testov
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 42
+                    datetime:
+                      type: string
+                      format: date-time
+                    city:
+                      type: string
+                      example: Bratislava
+                    country:
+                      type: string
+                      example: Slovensko
+                    questions:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          question_id:
+                            type: integer
+                          area:
+                            type: string
+                          text_sk:
+                            type: string
+                          text_en:
+                            type: string
+                          answered_correctly:
+                            type: boolean
+                          time_taken:
+                            type: number
+        '401':
+          description: Neautorizovaný
+
+  /skuska/api/api.php?route=tests/3:
+    get:
+      summary: Získať výsledok testu podľa ID
+      tags: [Test]
+      operationId: getTestResult
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            example: tests/3
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Výsledky testu
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    area:
+                      type: string
+                      example: Matematika
+                    text_sk:
+                      type: string
+                      example: Koľko je 2+2?
+                    answered_correctly:
+                      type: boolean
+                      example: true
+                    time_taken:
+                      type: number
+                      example: 4.2
+        '401':
+          description: Neautorizovaný
+
+  /skuska/api/api.php?route=tests/start:
+    post:
+      tags: [Test]
+      summary: Vytvorenie testu pre používateľa
+      operationId: startTest
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            example: tests/start
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required: [user_id, city, country]
+              properties:
+                user_id:
+                  type: integer
+                  example: 1
+                city:
+                  type: string
+                  example: Bratislava
+                country:
+                  type: string
+                  example: Slovensko
+      responses:
+        '201':
+          description: Test vytvorený
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Test vytvorený
+                  test_id:
+                    type: integer
+                    example: 123
+        '400':
+          description: Neplatné dáta
+        '401':
+          description: Neautorizovaný
+
+  /skuska/api/api.php?route=tests/answer:
+    post:
+      tags: [Test]
+      summary: Uloženie odpovede počas testovania
+      operationId: submitAnswer
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            example: tests/answer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required: [test_id, question_id, answered_correctly, time_taken]
+              properties:
+                test_id:
+                  type: integer
+                  example: 123
+                question_id:
+                  type: integer
+                  example: 5
+                answered_correctly:
+                  type: boolean
+                  example: false
+                time_taken:
+                  type: number
+                  example: 5.7
+      responses:
+        '201':
+          description: Odpoveď uložená
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Odpoveď uložená
+        '400':
+          description: Neplatné dáta
+        '401':
+          description: Neautorizovaný
+
+  /skuska/api/api.php?route=register:
+    post:
+      tags: [Autentifikácia]
+      summary: Registrácia používateľa
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required: [username, password]
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: student1
+                password:
+                  type: string
+                  example: tajneheslo
+      responses:
+        '200':
+          description: Registrovaný
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Registrovaný
+                  api_token:
+                    type: string
+                    example: abc123token
+        '409':
+          description: Používateľ už existuje
+
+  /skuska/api/api.php?route=login:
+    post:
+      tags: [Autentifikácia]
+      summary: Prihlásenie používateľa
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required: [username, password]
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: student1
+                password:
+                  type: string
+                  example: tajneheslo
+      responses:
+        '200':
+          description: Prihlásený
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Prihlásený
+                  api_token:
+                    type: string
+                    example: abc123token
+        '401':
+          description: Neplatné meno alebo heslo
+  /skuska/api/api.php?route=token/refresh:
+    post:
+      tags: [Autentifikácia]
+      summary: Znovuvygenerovanie API tokenu
+      operationId: refreshToken
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Nový token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Token aktualizovaný
+                  api_token:
+                    type: string
+                    example: novyTokenABC123
+        '401':
+          description: Neautorizovaný
+  /skuska/api/api.php?route=is-admin:
+    get:
+      tags: [Autentifikácia]
+      summary: Zisti, či je používateľ admin
+      operationId: isAdmin
+      parameters:
+        - name: route
+          in: query
+          required: true
+          schema:
+            type: string
+            example: is-admin
+      security:
+        - bearerAuth: []     # 🔒 štandardná ochrana
+      responses:
+        '200':
+          description: Admin stav
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin:
+                    type: boolean
+                    example: true
+        '401':
+          description: Neautorizovaný prístup
+
+
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    User:
+      type: object
+      required: [username, password]
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: student1
+        password:
+          type: string
+          example: tajneheslo
+        api_token:
+          type: string
+          example: d87a01b29c...
+        admin:
+          type: boolean
+
+    Question:
+      type: object
+      required: [area, text_sk, text_en, correct_answer]
+      properties:
+        id:
+          type: integer
+          example: 1
+        area:
+          type: string
+          example: Matematika
+        area_en:
+          type: string
+          example: Mathematics
+        text_sk:
+          type: string
+          example: Koľko je 2+2?
+        text_en:
+          type: string
+          example: What is 2+2?
+        correct_answer:
+          type: string
+          example: A
+
+    Test:
+      type: object
+      required: [user_id, city, country]
+      properties:
+        id:
+          type: integer
+          example: 42
+        user_id:
+          type: integer
+          example: 1
+        datetime:
+          type: string
+          format: date-time
+          example: "2025-05-18T10:45:00Z"
+        city:
+          type: string
+          example: Bratislava
+        country:
+          type: string
+          example: Slovensko
+
+    TestQuestion:
+      type: object
+      required: [test_id, question_id, answered_correctly, time_taken]
+      properties:
+        id:
+          type: integer
+          example: 101
+        test_id:
+          type: integer
+          example: 42
+        question_id:
+          type: integer
+          example: 1
+        answered_correctly:
+          type: boolean
+          example: true
+        time_taken:
+          type: number
+          format: float
+          example: 3.5
+
+   
